@@ -1,0 +1,215 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.racesaucy.read</groupId>
+  <artifactId>read-persist</artifactId>
+  <version>1.0</version>
+  <packaging>jar</packaging>
+  <name>read-persist</name>
+  <url>http://maven.apache.org</url>
+  <properties>
+	  <spring.version>4.2.3.RELEASE</spring.version>
+	  <java.version>1.8</java.version>
+	  <maven.javadoc.reporting.version>2.7</maven.javadoc.reporting.version>
+	  <commons.logging.version>1.1.1</commons.logging.version>
+	  <log4j.version>1.2.16</log4j.version>
+	  <context.path>rest-sample-persist</context.path>
+	  <junit.version>4.12</junit.version>
+	  <jackson.mapper.version>1.5.6</jackson.mapper.version>
+  </properties>
+  
+  
+ 	<build>
+	<resources>
+		<resource>
+			<directory>src/main/resources</directory>
+			<filtering>true</filtering>
+		</resource>
+	</resources>
+
+<!--
+	<plugins>
+		<plugin>
+		  <groupId>org.apache.maven.plugins</groupId>
+		  <artifactId>maven-shade-plugin</artifactId>
+		  <version>2.4.3</version>
+		  <executions>
+		    <execution>
+			<phase>package</phase>
+			<goals>
+				<goal>shade</goal>
+			</goals>
+			<configuration>
+			  	<transformers>
+	           	<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+   			       <resource>META-INF/spring.handlers</resource>
+            	</transformer>
+	            <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+	    	       <resource>META-INF/spring.schemas</resource>
+        	    </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+					<mainClass>com.racesaucy.read.adapter.ReadGarminGPXFile</mainClass>
+				</transformer>
+			  </transformers>
+			</configuration>
+		      </execution>
+		  </executions>
+		</plugin>
+	</plugins>
+	-->
+	
+ 	</build>
+
+  <dependencies>
+    	<dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aop</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aspects</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-expression</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-web</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-webmvc</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+		   <groupId>org.springframework</groupId>
+		   <artifactId>spring-orm</artifactId>
+		   <version>${spring.version}</version>
+		</dependency>
+		
+   		<dependency>
+		  <groupId>com.fasterxml.jackson.core</groupId>
+		  <artifactId>jackson-annotations</artifactId>
+		  <version>2.1.0</version>
+		</dependency>
+		<dependency>
+		  <groupId>com.fasterxml.jackson.core</groupId>
+		  <artifactId>jackson-core</artifactId>
+		  <version>2.1.0</version>
+		</dependency> <dependency>
+		  <groupId>com.fasterxml.jackson.core</groupId>
+		  <artifactId>jackson-databind</artifactId>
+		  <version>2.1.0</version>
+		</dependency>
+
+
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.4</version>
+		</dependency>
+		
+		<dependency>
+		   <groupId>com.sun</groupId>
+		   <artifactId>tools</artifactId>
+		   <version>1..0</version>
+		   <scope>system</scope>
+		   <systemPath>${env.JAVA_HOME}/lib/tools.jar</systemPath>
+		</dependency>
+		
+    	<dependency>
+            <groupId>commons-dbcp</groupId>
+            <artifactId>commons-dbcp</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+
+ 
+ 
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>4.2.8.Final</version>
+        </dependency>
+
+		<dependency>
+			<groupId>com.oracle</groupId>
+			<artifactId>ojdbc14</artifactId>
+			<version>10.2.0.4.0</version>
+		</dependency>
+    
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+
+       <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+	<dependency>
+	  <groupId>com.fasterxml.jackson.datatype</groupId>
+	  <artifactId>jackson-datatype-hibernate4</artifactId>
+	  <version>2.5.3</version>
+	</dependency>    
+
+<!-- 	
+    <dependency>
+	    <groupId>org.apache.derby</groupId>
+        <artifactId>derby</artifactId>
+        <version>10.10.2.0</version>
+    </dependency>
+        
+    <dependency>
+		<groupId>org.apache.derby</groupId>
+		<artifactId>derbyclient</artifactId>
+		<version>10.12.1.1</version>
+	</dependency>
+-->        
+
+	<dependency>
+		<groupId>mysql</groupId>
+		<artifactId>mysql-connector-java</artifactId>
+		<version>5.1.6</version>
+	</dependency>
+	
+	<!-- http://mvnrepository.com/artifact/org.apache.maven.plugins/maven-shade-plugin -->
+	<!--
+	<dependency>
+    	<groupId>org.apache.maven.plugins</groupId>
+    	<artifactId>maven-shade-plugin</artifactId>
+    	<version>2.4.3</version>
+	</dependency>
+	-->
+
+  </dependencies>
+	
+</project>
