@@ -120,6 +120,10 @@ public class ReadGarminGPXFile {
 
 
 	static void calcDistanceSpeedAndHeading(GpsData fromGpsPoint, GpsData toGpsPoint) {
+		
+		int secondsInHour = 3600;
+		double metersPerNauticalMile = 1.000000364 / 0.000539957;
+		
 		float distanceInMeteres = (float) LatLonUtilities.calcDistance(
 				fromGpsPoint.getLatitude(),
 				fromGpsPoint.getLongitude(),
@@ -133,7 +137,6 @@ public class ReadGarminGPXFile {
 				toGpsPoint.getLatitude(),
 				toGpsPoint.getLongitude());
 		
-		double metersPerNauticalMile = 1.000000364 / 0.000539957;
 		
 		double distanceInNauticalMile = distanceInMeteres / metersPerNauticalMile;
 
@@ -149,7 +152,7 @@ public class ReadGarminGPXFile {
 		
 		speed = LatLonUtilities.round(speed,  10.0);
 		
-		toGpsPoint.setLegTimeSecs((float) timeInHours);
+		toGpsPoint.setLegTimeSecs((float) timeInHours * secondsInHour);
 		toGpsPoint.setLegSpeed((float) speed);
 		toGpsPoint.setLegLength(distanceInMeteres);
 		toGpsPoint.setLegHeading(bearingInDegrees);
@@ -163,7 +166,7 @@ public class ReadGarminGPXFile {
 //				+ "\tBearing: " + bearingInDegrees + " degress");
 	}
 
-	void saveGPSSessionObservations(String sessionName, Date currentDate,Date endDate, List<GpsData> currentGpsPtList) {
+	static void saveGPSSessionObservations(String sessionName, Date currentDate, Date endDate, List<GpsData> currentGpsPtList) {
 
 		if (context == null) {
 			context = new ClassPathXmlApplicationContext("applicationContext.xml");
