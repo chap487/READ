@@ -23,8 +23,8 @@ public interface GpsDataDAO {
 	List<GpsData> findGpsDataBySessionPersistIdWithSessionPersistData(Integer id);
 	
 	SessionPersist getNewSessionPersist(Date startDate, String Name);
-
-	
+	void updateSessionPersist(com.racesaucy.read.domain.SessionPersist sessionPersist);
+	int storeJsonSessionGPSData(String jsonString);
 	
 }
 

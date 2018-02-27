@@ -4,11 +4,8 @@ import java.io.File;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -24,6 +21,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import com.racesaucy.read.domain.GpsData;
 import com.racesaucy.read.domain.SessionPersist;
 import com.racesaucy.read.service.GpsDataService;
+import com.racesaucy.read.web.utils.LatLonUtilities;
 
 // This adapter program reads the Garmin saved GPX xml file, 
 // and stores data in the GPS_DATA and SESSION_PERSIST tables. 
@@ -84,15 +82,15 @@ public class ReadGarminGPXFile {
 				} else {
 					// subtract 5 hours here because other time frame spans two days and I want to save session by date
 					if (dateFormatMDY.format(subtract5Hours(currentDate)).equals(dateFormatMDY.format(subtract5Hours(trkpt.getTrkPtDate())))) {
-						calcDistanceSpeedAndHeading(prevGpsDataObservation,currentGpsDataObservation);
+						LatLonUtilities.calcDistanceSpeedAndHeading(prevGpsDataObservation,currentGpsDataObservation);
 						currentGpsPtList.add(currentGpsDataObservation);
 						prevGpsDataObservation = new GpsData(currentGpsDataObservation);
 					} else {
 						// New Date, create a session and save track points
 						DateFormat df2 = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 						String formattedCurrentDate = df2.format(subtract5Hours(currentDate));
-						readGarminGPXFile.saveGPSSessionObservations("Garmin Track for: " + 
-								formattedCurrentDate, currentDate, prevGpsDataObservation.getDateTime(),currentGpsPtList);
+						readGarminGPXFile.saveGPSSessionObservations("Garmin Track for: " + formattedCurrentDate, currentGpsPtList);
+							//, currentDate, prevGpsDataObservation.getDateTime());
 
 						currentDate = null; trkpt.getTrkPtDate();
 //						currentGpsPtList.add(currentGpsDataObservation);
@@ -119,97 +117,6 @@ public class ReadGarminGPXFile {
 	}
 
 
-	static void calcDistanceSpeedAndHeading(GpsData fromGpsPoint, GpsData toGpsPoint) {
-		
-		int secondsInHour = 3600;
-		double metersPerNauticalMile = 1.000000364 / 0.000539957;
-		
-		float distanceInMeteres = (float) LatLonUtilities.calcDistance(
-				fromGpsPoint.getLatitude(),
-				fromGpsPoint.getLongitude(),
-				toGpsPoint.getLatitude(),
-				toGpsPoint.getLongitude());
-		
-		
-		float bearingInDegrees = (float) LatLonUtilities.calcBearing(
-				fromGpsPoint.getLatitude(),
-				fromGpsPoint.getLongitude(),
-				toGpsPoint.getLatitude(),
-				toGpsPoint.getLongitude());
-		
-		
-		double distanceInNauticalMile = distanceInMeteres / metersPerNauticalMile;
-
-		double timeInHours = (float) ((toGpsPoint.getDateTime().getTime() - fromGpsPoint.getDateTime().getTime()) / 1000.0 / 60.0 / 60.0);
-		
-		// Note: 6 knots = 3.08667 meters per second
-		double speed;
-		if (timeInHours == 0.0) {
-			speed = 0;
-		} else {
-			speed = distanceInNauticalMile / timeInHours;
-		}
-		
-		speed = LatLonUtilities.round(speed,  10.0);
-		
-		toGpsPoint.setLegTimeSecs((float) timeInHours * secondsInHour);
-		toGpsPoint.setLegSpeed((float) speed);
-		toGpsPoint.setLegLength(distanceInMeteres);
-		toGpsPoint.setLegHeading(bearingInDegrees);
-		
-//		System.out.println("In calcDistanceSpeedAndHeading"
-//				+ "\tFrom Point A: " + fromGpsPoint.getLatitude() + " " + fromGpsPoint.getLongitude()
-//				+ "\tTo Point B: " + toGpsPoint.getLatitude() + " " + toGpsPoint.getLongitude()
-//				+ "\tDistinance in nautical miles: " + distanceInNauticalMile + " meters"
-//				+ "\tTime: " + timeInHours + " hours" 
-//				+ "\tSpeed: " + speed + " knots"
-//				+ "\tBearing: " + bearingInDegrees + " degress");
-	}
-
-	static void saveGPSSessionObservations(String sessionName, Date currentDate, Date endDate, List<GpsData> currentGpsPtList) {
-
-		if (context == null) {
-			context = new ClassPathXmlApplicationContext("applicationContext.xml");
-			emService = (GpsDataService) context.getBean("gpsDataService"); //new GpsDataServiceImpl(); //
-		}
-
-		SessionPersist sessionPersist = (SessionPersist) context.getBean("sessionPersist"); 
-		sessionPersist.setDateTime(currentDate) ;
-		sessionPersist.setEndDateTime(endDate);
-		
-//		DateFormat df2 = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-//		Date currentDateAdjusted = subtract5Hours(currentDate); 
-//		String formattedCurrentDate = df2.format(currentDateAdjusted);
-		
-		sessionPersist.setSessionName(sessionName);
-		sessionPersist.setSessionDescription(sessionName);
-
-	    GpsData gpsData = null; 
-	    List<GpsData> gpsDataList = new ArrayList<GpsData>();
-	    
-	    for (int i=0; i < currentGpsPtList.size(); i++)
-		{
-	    	GpsData currentGpsObservation = currentGpsPtList.get(i);
-	    	Date observationDateTime = currentGpsObservation.getDateTime();
-	    	if (i == 0) {
-	    		sessionPersist.setDateTime(observationDateTime); 
-	    		sessionPersist.setStartDateTime(observationDateTime);
-	    	}
-	    	
-	    	if (i == currentGpsPtList.size()-1) {
-	    		sessionPersist.setEndDateTime(observationDateTime);
-	    	}
-	    	
-			gpsData = (GpsData) context.getBean("gpsData"); //new GpsData();
-			gpsData.copyValues(currentGpsObservation);
-	
-			//System.out.println("ReadGarminGPXFile gpsData:" + gpsData.toString());
-			gpsDataList.add(gpsData);
-		}
-		
-        emService.persistSessionPersist(sessionPersist,gpsDataList);
-		
-	};
 	
 	GpsData convertTrkPtToGPSData(Trkpt trkpt) {
 	
@@ -230,5 +137,89 @@ public class ReadGarminGPXFile {
 		
 		return gpsData;
 	}
+	
+	public void saveGPSSessionObservations(String sessionName, List<GpsData> currentGpsPtList) {
+
+		if (context == null) {
+			context = new ClassPathXmlApplicationContext("applicationContext.xml");
+			emService = (GpsDataService) context.getBean("gpsDataService"); //new GpsDataServiceImpl(); //
+		}
+
+		SessionPersist sessionPersist = (SessionPersist) context.getBean("sessionPersist"); 
+		sessionPersist.setSessionName(sessionName);
+		sessionPersist.setSessionDescription(sessionName);
+
+	    GpsData gpsData = null; 
+	    List<GpsData> gpsDataList = new ArrayList<GpsData>();
+	    
+	    for (int i=0; i < currentGpsPtList.size(); i++)
+		{
+	    	GpsData currentGpsObservation = currentGpsPtList.get(i);
+	    	// if we save a new gps data point, it better have zero id to start
+	    	currentGpsObservation.setGpsDataId(0);
+	    	Date observationDateTime = currentGpsObservation.getDateTime();
+	    	if (i == 0) {
+	    		sessionPersist.setDateTime(observationDateTime); 
+	    		sessionPersist.setStartDateTime(observationDateTime);
+	    	}
+	    	
+	    	if (i == currentGpsPtList.size()-1) {
+	    		sessionPersist.setEndDateTime(observationDateTime);
+	    	}
+	    	
+			gpsData = (GpsData) context.getBean("gpsData"); //new GpsData();
+			gpsData.copyValues(currentGpsObservation);
+	
+			//System.out.println("ReadGarminGPXFile gpsData:" + gpsData.toString());
+			gpsDataList.add(gpsData);
+		}
+		
+        emService.persistSessionPersist(sessionPersist,gpsDataList);
+	};
+
+
+	public SessionPersist saveGPSSessionObservationsList(SessionPersist sessionPersist, String sessionName, List<GpsData> currentGpsPtList) {
+
+		if (context == null) {
+			context = new ClassPathXmlApplicationContext("applicationContext.xml");
+			emService = (GpsDataService) context.getBean("gpsDataService"); //new GpsDataServiceImpl(); //
+		}
+
+		if ( sessionPersist == null) {
+		    sessionPersist = emService.getNewSessionPersist(new Date(), "New TCPIP GPS Session");
+//			sessionPersist = (SessionPersist) context.getBean("sessionPersist"); 
+//			sessionPersist.setSessionName(sessionName);
+//			sessionPersist.setSessionDescription(sessionName);
+		}
+
+	    GpsData gpsData = null; 
+	    List<GpsData> gpsDataList = new ArrayList<GpsData>();
+	    
+	    for (int i=0; i < currentGpsPtList.size(); i++)
+		{
+	    	GpsData currentGpsObservation = currentGpsPtList.get(i);
+	    	// if we save a new gps data point, it better have zero id to start
+	    	currentGpsObservation.setGpsDataId(0);
+	    	Date observationDateTime = currentGpsObservation.getDateTime();
+	    	if (i == 0) {
+	    		sessionPersist.setDateTime(observationDateTime); 
+	    		sessionPersist.setStartDateTime(observationDateTime);
+	    	}
+	    	
+	    	if (i == currentGpsPtList.size()-1) {
+	    		sessionPersist.setEndDateTime(observationDateTime);
+	    	}
+	    	
+			gpsData = (GpsData) context.getBean("gpsData"); //new GpsData();
+			gpsData.copyValues(currentGpsObservation);
+	
+			//System.out.println("ReadGarminGPXFile gpsData:" + gpsData.toString());
+			gpsDataList.add(gpsData);
+		}
+		
+        emService.persistSessionPersist(sessionPersist,gpsDataList);
+        
+        return sessionPersist;
+	};
 
 }

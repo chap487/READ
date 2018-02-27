@@ -23,4 +23,7 @@ public interface GpsDataService {
 	public String toStringSessionPersistById(Integer id);
 
 	public SessionPersist getNewSessionPersist(Date start, String name);
+	public int storeJsonSessionGPSData(String jsonString);
+	public void updateSessionPersist(SessionPersist sessionPersist);
+	void persistGpsDataList(List<GpsData> list);
 }

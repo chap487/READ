@@ -118,7 +118,7 @@ public class GpsData
 	}
 
 	@SuppressWarnings("unused")
-	private void setGpsDataId(int gpsDataId) {
+	public void setGpsDataId(int gpsDataId) {
 		this.gpsDataId = gpsDataId;
 	}
 

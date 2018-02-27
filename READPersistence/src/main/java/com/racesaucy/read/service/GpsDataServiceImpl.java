@@ -28,6 +28,14 @@ public class GpsDataServiceImpl implements GpsDataService {
 	public void updateGpsData(GpsData gpsData) {
 		gpsDataDAO.updateGpsData(gpsData);
 	}
+	
+	@Override
+	@Transactional
+	public void updateSessionPersist(SessionPersist sessionPersist) {
+		gpsDataDAO.updateSessionPersist(sessionPersist);
+	}
+	
+
 
 	@Override
 	@Transactional
@@ -90,8 +98,17 @@ public class GpsDataServiceImpl implements GpsDataService {
 	@Transactional
 	public void persistSessionPersist(SessionPersist sessionPersist, List<GpsData> list) {
 		
-		Date start = new Date();
-		gpsDataDAO.persistSessionPersist(sessionPersist);
+		SessionPersist sessionPersistExisting = null;
+		
+		if(sessionPersist.getSessionPersistId() > 0) {
+			sessionPersistExisting = gpsDataDAO.findSessionPersistById(sessionPersist.getSessionPersistId());
+		}
+		
+		if (sessionPersistExisting != null) {
+			sessionPersist = sessionPersistExisting;
+		} else {
+			gpsDataDAO.persistSessionPersist(sessionPersist);
+		}
 		
 		for (GpsData g: list) {
 			if (g ==null) continue;
@@ -99,12 +116,18 @@ public class GpsDataServiceImpl implements GpsDataService {
 			g.setSessionPersist(sessionPersist);
 			gpsDataDAO.persistGpsData(g);
 		}
-		Date end = new Date();		
-//		System.out.println("In persistSessionPersist() before persist: " + start.toString());
-//		System.out.println("In persistSessionPersist() after persist: " + end.toString() +
-//				"\n\n\tTotal database persist time: " + (end.getTime() - start.getTime())/1000.0);
 	}
 
+	@Override
+	@Transactional
+	public void persistGpsDataList(List<GpsData> list) {
+		
+		for (GpsData g: list) {
+			if (g ==null) continue;
+			gpsDataDAO.persistGpsData(g);
+		}
+	}
+	
 	@Override
 	public List<SessionPersist> findAllSessionPersistWithGpsData() {
 		return gpsDataDAO.findAllSessionPersistWithGpsData();
@@ -119,6 +142,13 @@ public class GpsDataServiceImpl implements GpsDataService {
 	public SessionPersist getNewSessionPersist(Date start, String name) {
 		return gpsDataDAO.getNewSessionPersist(start, name);
 	}
+	
+	@Override
+	public int storeJsonSessionGPSData(String jsonString) {
+		return gpsDataDAO.storeJsonSessionGPSData(jsonString);
+
+	}
+
 
 
 }

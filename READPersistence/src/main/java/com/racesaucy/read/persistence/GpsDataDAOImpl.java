@@ -1,19 +1,23 @@
 package com.racesaucy.read.persistence;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.persistence.Column;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.racesaucy.read.domain.GpsData;
 import com.racesaucy.read.domain.SessionPersist;
 
@@ -173,6 +177,43 @@ public class GpsDataDAOImpl implements GpsDataDAO {
 
 		return sessionPersist;
 	}
+	
+	
+	@Override
+	public void updateSessionPersist(SessionPersist sessionPersist) {
+		sessionFactory.getCurrentSession().update(sessionPersist);
+		
+//		if (sessionPersist.getGpsDataList() != null) {
+//			for (GpsData gpsData : sessionPersist.getGpsDataList()) {
+//				persistGpsData(gpsData);
+//			}
+//		}
+	}
+	
+	@Override
+	public 	int storeJsonSessionGPSData(String jsonString) {
+		SessionPersist sessionPersistEntry = null;
+		try {
+			
+			ObjectMapper mapper = new ObjectMapper();
 
+		    sessionPersistEntry = mapper.readValue(jsonString, SessionPersist.class);
+	       
+//		    String content = new String(Files.readAllBytes(Paths.get("c:/projects/READ/READPersistence/src/test/resources/GpsTestData.json")));
+//	        System.out.println("Json String: " + content);
 
+		} catch (JsonGenerationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return 0;
+	}
+
+	
 }

@@ -1,10 +1,7 @@
 package com.racesaucy.read.adapter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
@@ -20,94 +17,66 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.racesaucy.read.domain.GpsData;
+import com.racesaucy.read.web.utils.LatLonUtilities;
 
-public class ReadNME0183Data extends ReadGarminGPXFile {
+public class ReadNME0183Data { 
 
 	// Date is read from GPZDA record. Needed because GPS observations only have time of day
 	ZonedDateTime gpsZonedDateTime = null;
 	
-	// 
 	static int gpsCurrentHour = -99;
 	String gpsSessionName = null;
 	
     LocalDateTime gpsLocalDate = null;
     LocalDateTime kplexDateTime;
     
-    int MinTimeBetweenObservations = 60*1000; 
+    //TODO: Make save rate a parameter
+    // for now, just save one observation per minute
+    int minTimeBetweenObservations = 6*1000; 
+
+    GpsData currentGpsDataObservation = null;
+	GpsData fromGpsDataObservation = null;
+    List<GpsData> gpsObservationList = new ArrayList<GpsData>();
 
 	public static void main(String[] args) {
 		ReadNME0183Data readNME0183Data = new ReadNME0183Data();
-
-		String fileName = "C:\\Users\\edmun\\projects\\READPersistence\\src\\test\\resources\\June_07_2017.dat"; //GpsMay282017.txt";
-		//String fileName = "C:/projects/READPersistence/nmea018Data.txt";
-
-		List<GpsData> gpsDataList = readNME0183Data.loadInputfile(fileName);
 		
-		saveGPSSessionObservations(readNME0183Data.gpsSessionName, 
-				convertLocalDateTimeToDate(readNME0183Data.gpsZonedDateTime),
-				gpsDataList.get(0).getDateTime(),gpsDataList);
+		String fileName;
+		if (args.length > 0) {
+			fileName = args[0];
+		} else {
+			fileName = "C:\\projects\\READ\\READPersistence\\src\\test\\resources\\June_07_2017.dat"; //GpsMay282017.txt";
+		}
+
+		readNME0183Data.loadInputfile(fileName);
+		
+		ReadGarminGPXFile readGarminGPXFile = new ReadGarminGPXFile();
+		readGarminGPXFile.saveGPSSessionObservations(readNME0183Data.gpsSessionName,readNME0183Data.gpsObservationList); 
 	}
 
 	public List<GpsData> loadInputfile(String fileName) {
-	    List<GpsData> gpsObservationList = new ArrayList<GpsData>();
 		try {
 	        Path path = Paths.get(fileName);
 			Pattern p = Pattern.compile("(.c:)(\\d*)(\\*...\\$)(.*$)");
 			Scanner scanner = new Scanner(path);
 
-			//boolean foundDateRecord = false;
-		    GpsData currentGpsDataObservation = null;
-			GpsData fromGpsDataObservation = null;
-
 			while(scanner.hasNext()){
 	    		Matcher m = p.matcher(scanner.nextLine());
 	    		while (m.find()) {
-	    			//System.out.println("GPS Observation:" + "\n\tTime: " + m.group(2) + "\tData: " + m.group(4));
-
-	    			// TODO: check if record has timestamp from Kplex. If not consider using system date-time
+	    			// TODO: check if record really has Kplex timestamp. 
 	    			Long timestamp = Long.valueOf(m.group(2).trim());
 	    			kplexDateTime = Instant.ofEpochMilli(timestamp).
 	    					atZone(ZoneId.systemDefault()).toLocalDateTime();
 	    			
-	    			String[] nme183InputRecord = m.group(4).trim().split(",");
-	    			String recordType = nme183InputRecord[0];
+	    			String[] nme0183RecordValues = m.group(4).trim().split(",");
+	    			String recordType = nme0183RecordValues[0];
+	    			
+	    			processNmea0183Record(recordType, nme0183RecordValues);
 
-	    			if (recordType.equalsIgnoreCase("GPZDA") && gpsZonedDateTime == null) {
-	    				// get the date from the first GPZDA record because the GPS records only have time
-	    				gpsZonedDateTime = processGZDARecord(nme183InputRecord);
-	    				gpsSessionName = setGpsSessionName(gpsZonedDateTime);
-    				}
-
-    				if (recordType.equalsIgnoreCase("GPGSV")) {
-    					// ignore this record type for now
-    					//processGPGSVRecord(inputRecordValues);
-    					continue;
-    				}
-
-    				//GpsData currentGpsDataObservation = null;
-    				if (recordType.equalsIgnoreCase("GPGGA") && gpsZonedDateTime != null) {
-    					currentGpsDataObservation = processGPGGARecord(nme183InputRecord, gpsObservationList);
-	    				//System.out.println("GPS DATA POINT: Lat: " + latitude + " Lon: " + longitude + " Alt:" + altitude + " Time: " + localDateTime);
-	    				
-	    				if (fromGpsDataObservation == null) {
-	    					// first point do not calc speed and heading.
-	    					fromGpsDataObservation = new GpsData(currentGpsDataObservation);
-    		    			gpsObservationList.add(currentGpsDataObservation);
-	    				} else {
-	    					if (currentGpsDataObservation.getDateTime().getTime() - fromGpsDataObservation.getDateTime().getTime() >= MinTimeBetweenObservations) {
-	    						calcDistanceSpeedAndHeading(fromGpsDataObservation, currentGpsDataObservation);
-	    						fromGpsDataObservation = new GpsData(currentGpsDataObservation);
-	
-	    						System.out.println(currentGpsDataObservation.toString());
-	    		    			gpsObservationList.add(currentGpsDataObservation);
-	    					}
-	    				}
-    				}
-	    		} // while m.find
-	        } //while scanner.hasNext()
+	    		} 
+	        } 
 			scanner.close();
 			
-			// save or print session persist for now
 			System.out.println("GPS Track for: " + gpsSessionName);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -117,22 +86,40 @@ public class ReadNME0183Data extends ReadGarminGPXFile {
 		
 	}
 	
+	void processNmea0183Record(String recordType, String[] nme0183RecordValues) {
+		if (recordType.equalsIgnoreCase("GPZDA") && gpsZonedDateTime == null) {
+			// get the date from the first GPZDA record because the GPS records only have time
+			gpsZonedDateTime = processGZDARecord(nme0183RecordValues);
+			gpsSessionName = setGpsSessionName(gpsZonedDateTime);
+		}
+
+		if (recordType.equalsIgnoreCase("GPGGA") && gpsZonedDateTime != null) {
+			currentGpsDataObservation = processGPGGARecord(nme0183RecordValues, gpsObservationList);
+			//System.out.println("GPS DATA POINT: Lat: " + latitude + " Lon: " + longitude + " Alt:" + altitude + " Time: " + localDateTime);
+			
+			if (fromGpsDataObservation == null) {
+				// first point do not calc speed and heading.
+				fromGpsDataObservation = new GpsData(currentGpsDataObservation);
+    			gpsObservationList.add(currentGpsDataObservation);
+			} else {
+				// Check minTimeBetweenObservations and then calc speed and heading and add to list
+				if (currentGpsDataObservation.getDateTime().getTime() - fromGpsDataObservation.getDateTime().getTime() >= minTimeBetweenObservations) {
+					LatLonUtilities.calcDistanceSpeedAndHeading(fromGpsDataObservation, currentGpsDataObservation);
+					fromGpsDataObservation = new GpsData(currentGpsDataObservation);
+
+					System.out.println(currentGpsDataObservation.toString());
+	    			gpsObservationList.add(currentGpsDataObservation);
+				}
+			}
+		}
+
+	}
+	
 	String setGpsSessionName(ZonedDateTime	gpsZonedDateTime) {
 		String gpsSessionName = "GPS Track Data for: " + gpsZonedDateTime.withZoneSameInstant(ZoneId.systemDefault()).
 				format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 		return gpsSessionName;
 	}
-
-//	if (gpsLocalDate != null) {
-//	Calendar cal = Calendar.getInstance();
-//	cal.set(gpsLocalDate.getYear(), gpsLocalDate.getMonthValue(), gpsLocalDate.getDayOfMonth(), 
-//			gpsLocalDate.getHour(), gpsLocalDate.getMinute(),gpsLocalDate.getSecond());
-//	Date currentDate = cal.getTime();
-//	DateFormat df2 = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-//	String formattedCurrentDate = df2.format(subtract5Hours(currentDate));
-//	saveGPSSessionObservations("GPS Track Data for: " + 
-//			formattedCurrentDate, subtract5Hours(currentDate), currentGpsPtList);
-//}
 
 	GpsData processGPGGARecord(String[] inputRecordValues, List<GpsData> currentGpsPtList) {
 		//	     GGA          Global Positioning System Fix Data
@@ -162,10 +149,8 @@ public class ReadNME0183Data extends ReadGarminGPXFile {
 		int second = Integer.parseInt(inputRecordValues[1].substring(4, 6));
 	
 		if (gpsCurrentHour != hour) {
-			//if (gpsCurrentHour == 23) {
-				gpsZonedDateTime = gpsZonedDateTime.plusHours(1);
-				gpsCurrentHour = gpsZonedDateTime.getHour();
-			//}
+			gpsZonedDateTime = gpsZonedDateTime.plusHours(1);
+			gpsCurrentHour = gpsZonedDateTime.getHour();
 		}
 		LocalDateTime gpsDateTime  = LocalDateTime.of(gpsZonedDateTime.toLocalDate(),LocalTime.of(hour, minute, second)); 
 		

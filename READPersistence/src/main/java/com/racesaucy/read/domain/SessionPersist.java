@@ -51,6 +51,18 @@ public class SessionPersist implements Serializable {
 		//this.gpsDataList = gpsDataList;
 	}
 
+	public SessionPersist(int sessionPersistId, Date dateTime, Date startDateTime, Date endDateTime, String sessionName,
+			String sessionDescription, Set<GpsData> gpsDataList) {
+		super();
+		this.sessionPersistId = sessionPersistId;
+		this.dateTime = dateTime;
+		this.startDateTime = startDateTime;
+		this.endDateTime = endDateTime;
+		this.sessionName = sessionName;
+		this.sessionDescription = sessionDescription;
+		this.gpsDataList = gpsDataList;
+	}
+
 	@Id
 	@Column(name="SESSION_PERSIST_ID")
 	@GeneratedValue(strategy=GenerationType.AUTO)
@@ -80,8 +92,8 @@ public class SessionPersist implements Serializable {
 		return this.gpsDataList;
 	}
 
-	public Set<GpsData> setGpsDataList(Set<GpsData> gpsDataList) {
-		return this.gpsDataList;
+	public void setGpsDataList(Set<GpsData> gpsDataList) {
+		this.gpsDataList = gpsDataList;
 	}
 
 	public int getSessionPersistId() {
