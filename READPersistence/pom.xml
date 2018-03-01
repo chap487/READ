@@ -8,7 +8,7 @@
   <url>http://maven.apache.org</url>
   <properties>
 	  <spring.version>4.2.3.RELEASE</spring.version>
-	  <java.version>1.8</java.version>
+	  <java.version>1.7</java.version>
 	  <maven.javadoc.reporting.version>2.7</maven.javadoc.reporting.version>
 	  <commons.logging.version>1.1.1</commons.logging.version>
 	  <log4j.version>1.2.16</log4j.version>
