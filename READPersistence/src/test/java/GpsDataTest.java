@@ -267,7 +267,7 @@ public void testGetGpsData() {
 	    Assert.assertTrue(sessionPersist.getSessionPersistId() > 0);
 	}
 
-
+	@Ignore
 	@Test
 	public void testLoadJsonFileAndCreateSessionPersistAndStore() {
 		
