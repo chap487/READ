@@ -7,8 +7,10 @@
   <name>read-persist</name>
   <url>http://maven.apache.org</url>
   <properties>
-	  <spring.version>4.2.3.RELEASE</spring.version>
+	  <maven.compiler.source>1.8</maven.compiler.source>
+      <maven.compiler.target>1.8</maven.compiler.target>
 	  <java.version>1.8</java.version>
+	  <spring.version>4.2.3.RELEASE</spring.version>
 	  <maven.javadoc.reporting.version>2.7</maven.javadoc.reporting.version>
 	  <commons.logging.version>1.1.1</commons.logging.version>
 	  <log4j.version>1.2.16</log4j.version>
@@ -26,7 +28,7 @@
 		</resource>
 	</resources>
 
-<!--
+
 	<plugins>
 		<plugin>
 		  <groupId>org.apache.maven.plugins</groupId>
@@ -47,7 +49,7 @@
 	    	       <resource>META-INF/spring.schemas</resource>
         	    </transformer>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-					<mainClass>com.racesaucy.read.adapter.ReadGarminGPXFile</mainClass>
+					<mainClass>com.racesaucy.read.adapter.TcpAdapter</mainClass>
 				</transformer>
 			  </transformers>
 			</configuration>
@@ -55,7 +57,6 @@
 		  </executions>
 		</plugin>
 	</plugins>
-	-->
 	
  	</build>
 
