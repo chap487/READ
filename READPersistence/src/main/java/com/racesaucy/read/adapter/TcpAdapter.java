@@ -34,7 +34,8 @@ public class TcpAdapter extends ReadNME0183Data {
 		try {
             //socket = new Socket("192.168.1.105", 10110);
             //socket = new Socket("192.168.42.3", 10110);
-            socket = new Socket("67.175.139.230", 10110);
+            //socket = new Socket("67.175.139.230", 10110);
+            socket = new Socket("127.0.0.1", 10110);
             os = new DataOutputStream(socket.getOutputStream());
             is = new DataInputStream(socket.getInputStream());
         } catch (UnknownHostException e) {
