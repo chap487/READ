@@ -105,6 +105,9 @@ public class GpsDataServiceImpl implements GpsDataService {
 		}
 		
 		if (sessionPersistExisting != null) {
+			sessionPersistExisting.setEndDateTime(sessionPersist.getEndDateTime());
+//			sessionPersistExisting.setDateTime(sessionPersist.getDateTime());
+//			sessionPersistExisting.setStartDateTime(sessionPersist.getStartDateTime());
 			sessionPersist = sessionPersistExisting;
 		} else {
 			gpsDataDAO.persistSessionPersist(sessionPersist);

@@ -186,10 +186,14 @@ public class ReadGarminGPXFile {
 		}
 
 		if ( sessionPersist == null) {
-		    sessionPersist = emService.getNewSessionPersist(new Date(), "New TCPIP GPS Session");
-//			sessionPersist = (SessionPersist) context.getBean("sessionPersist"); 
-//			sessionPersist.setSessionName(sessionName);
-//			sessionPersist.setSessionDescription(sessionName);
+			Date startDate = null;
+			if (currentGpsPtList != null && currentGpsPtList.size() > 0) {
+				startDate = currentGpsPtList.get(0).getDateTime();
+			} else {
+				startDate = new Date();
+			}
+		    sessionPersist = emService.getNewSessionPersist(startDate, sessionName);
+		    sessionPersist.setDateTime(startDate);
 		}
 
 	    GpsData gpsData = null; 

@@ -6,16 +6,21 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Date;
 
 import com.racesaucy.read.domain.GpsData;
 import com.racesaucy.read.domain.SessionPersist;
 
 public class TcpAdapter extends ReadNME0183Data {
 
+	String socketAdress = null;
 	public static void main(String[] args) {
 		
 		TcpAdapter tcpAdapter = new TcpAdapter();
+		
+		if (args.length > 0) {
+            System.out.println("args[0] = " + args[0]);
+            tcpAdapter.socketAdress = args[0];
+		}
 		
 		tcpAdapter.processTcpSocket();
 		
@@ -32,10 +37,12 @@ public class TcpAdapter extends ReadNME0183Data {
 		DataInputStream is = null;
 
 		try {
-            //socket = new Socket("192.168.1.105", 10110);
-            //socket = new Socket("192.168.42.3", 10110);
-            //socket = new Socket("67.175.139.230", 10110);
-            socket = new Socket("127.0.0.1", 10110);
+			// Running Kplex software on pi and connect to it with TCP. Update database real time.   
+            //socket = new Socket("192.168.1.105", 10110); // run on pc, home network, and connecting internally
+            //socket = new Socket("192.168.42.3", 10110);  // run on pi, wifi hotspot net work.  
+            //socket = new Socket("67.175.139.230", 10110);// run on pc, home network, and connecting remotely
+            //socket = new Socket("127.0.0.1", 10110);     // run on pi, home network, pi connects to network with ethernet update data
+            socket = new Socket(this.socketAdress, 10110); // run on home network, and connecting remotely
             os = new DataOutputStream(socket.getOutputStream());
             is = new DataInputStream(socket.getInputStream());
         } catch (UnknownHostException e) {
@@ -56,7 +63,7 @@ public class TcpAdapter extends ReadNME0183Data {
 	    			processNmea0183Record(recordType, nme0183RecordValues);
 
 	    			if (gpsObservationList.size() >= 2) {
-		                System.out.println("Client: gpsObservationList.size() >= 5");
+		                System.out.println("Client: gpsObservationList.size() >= 2");
 
 		                sessionPersist = readGarminGPXFile.saveGPSSessionObservationsList(sessionPersist,gpsSessionName, gpsObservationList);
 	    				gpsZonedDateTime = null;
